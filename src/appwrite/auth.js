@@ -1,7 +1,4 @@
 
-/* eslint-disable no-useless-catch */
-/* eslint-disable no-undef */
-
 import conf from "../conf/conf.js"
 import { Client, Account } from "appwrite"
 
