@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
-
 import appwriteService from "../appwrite/config";
 import Button from "../components/Button";
 import Container from "../components/container/Container";
@@ -9,21 +8,40 @@ import { useSelector } from "react-redux";
 
 function Post() {
   const [post, setPost] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const { slug } = useParams();
   const navigate = useNavigate();
   const userData = useSelector((state) => state.auth.userData);
   const isAuthor = post && userData ? post.userId === userData.$id : false;
 
   useEffect(() => {
+    let isMounted = true; // Track if the component is mounted
+
     if (slug) {
-      appwriteService.getPost(slug).then((post) => {
-        if (post) {
-          setPost(post);
-        } else {
-          navigate("/");
-        }
-      });
+      setLoading(true);
+      appwriteService.getPost(slug)
+        .then((post) => {
+          if (isMounted) {
+            if (post) {
+              setPost(post);
+            } else {
+              navigate("/");
+            }
+            setLoading(false);
+          }
+        })
+        .catch((err) => {
+          if (isMounted) {
+            setError("Error fetching post");
+            setLoading(false);
+          }
+        });
     }
+
+    return () => {
+      isMounted = false; // Cleanup
+    };
   }, [slug, navigate]);
 
   const deletePost = () => {
@@ -31,9 +49,32 @@ function Post() {
       if (status) {
         appwriteService.deleteFile(post.featuredImage);
         navigate("/");
+      } else {
+        setError("Error deleting post");
       }
     });
   };
+
+  if (loading) {
+    return (
+      <div className="py-8">
+        <Container>
+          <p>Loading post...</p>
+        </Container>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="py-8">
+        <Container>
+          <p className="text-red-500">{error}</p>
+        </Container>
+      </div>
+    );
+  }
+
   return post ? (
     <div className="py-8">
       <Container>
@@ -44,7 +85,7 @@ function Post() {
             className="rounded-xl"
           />
           {isAuthor && (
-            <div className="absolute-right-6 top-6">
+            <div className="absolute right-6 top-6">
               <Link to={`/edit-post/${post.$id}`}>
                 <Button bgColor="bg-green-500" className="mr-3">
                   Edit

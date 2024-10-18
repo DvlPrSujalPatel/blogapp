@@ -1,17 +1,18 @@
-import { StrictMode } from 'react'
-import { createRoot } from 'react-dom/client'
+import React from 'react'
+import ReactDOM from 'react-dom/client'
 import App from './App.jsx'
 import './index.css'
-import { createBrowserRouter, RouterProvider } from 'react-router-dom';
-import { Provider } from 'react-redux';
-import store from "./store/store.js";
+import {createBrowserRouter, RouterProvider} from "react-router-dom"
+import { Provider } from 'react-redux'
+import store from "./store/store.js"
 
-import Home from "./pages/Home.jsx";
-import Login from "./pages/Login.jsx";
-import Protected from "./components/AuthLayout.jsx";
-import Signup from "./pages/Signup.jsx";
-import AllPosts from "./pages/AllPosts.jsx";
-import AddPost from "./pages/AddPost.jsx";
+
+import Home from "./pages/Home.jsx"
+import Login from "./pages/Login.jsx"
+import Protected from "./components/AuthLayout.jsx"
+import Signup from "./pages/Signup.jsx"
+import AllPosts from "./pages/AllPosts.jsx"
+import AddPost from "./pages/AddPost.jsx"
 import EditPost from "./pages/EditPost.jsx"
 import Post from "./pages/Post.jsx"
 
@@ -43,7 +44,7 @@ const router = createBrowserRouter([
       {
         path: "/all-posts",
         element: (
-          <Protected authentication={true}>
+          <Protected authentication>
             <AllPosts />
           </Protected>
         )
@@ -51,7 +52,7 @@ const router = createBrowserRouter([
       {
         path: "/add-post",
         element: (
-          <Protected authentication={true}>
+          <Protected authentication>
             <AddPost />
           </Protected>
         )
@@ -59,7 +60,7 @@ const router = createBrowserRouter([
       {
         path: "/edit-post/:slug",
         element: (
-          <Protected authentication={true}>
+          <Protected authentication>
             <EditPost />
           </Protected>
         )
@@ -67,19 +68,20 @@ const router = createBrowserRouter([
       {
         path: "/post/:slug",
         element: (
-          <Protected authentication={true}>
+          <Protected authentication>
             <Post />
           </Protected>
         )
-      },
+      }
     ]
   }
 ])
 
-createRoot(document.getElementById('root')).render(
-  <StrictMode>
+
+ReactDOM.createRoot(document.getElementById('root')).render(
+  <React.StrictMode>
     <Provider store={store}>
-    <RouterProvider router={router} />
+      <RouterProvider router={router} />
     </Provider>
-  </StrictMode>
+  </React.StrictMode>,
 )

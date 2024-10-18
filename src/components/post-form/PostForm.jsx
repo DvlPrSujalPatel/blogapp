@@ -4,54 +4,56 @@ import Button from "../Button";
 import Input from "../Input";
 import RTE from "../RTE";
 import Select from "../Select";
-import appwriteSerice from "../../appwrite/config";
+import appwriteService from "../../appwrite/config"; // Corrected spelling
 import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 
 export default function PostForm({ post }) {
-  const { register, handleSubmit, watch, setValue, control, getValues } =
-    useForm({
-      defaultValues: {
-        tittle: post?.title || "",
-        slug: post?.slug || "",
-        content: post?.content || "",
-        status: post?.status || "active",
-      },
-    });
+  const { register, handleSubmit, watch, setValue, control, getValues } = useForm({
+    defaultValues: {
+      title: post?.title || "",
+      slug: post?.slug || "",
+      content: post?.content || "",
+      status: post?.status || "active",
+      image: null, // Added default value for image
+    },
+  });
 
   const navigate = useNavigate();
   const userData = useSelector((state) => state.auth.userData);
 
   const submit = async (data) => {
-    if (post) {
-      const file = data.image[0]
-        ? await appwriteSerice.uploadFile(data.image[0])
-        : null;
-
-      if (file) {
-        appwriteSerice.deleteFile(post.featuredImage);
-      }
-      const dbPost = await appwriteSerice.updatePost(post.$id, {
-        ...data,
-        featuredImage: file ? file.$id : undefined,
-      });
-      if (dbPost) {
-        navigate(`/post/${dbPost.$id}`);
-      }
-    } else {
-      const file = await appwriteSerice.uploadFile(data.image[0]);
-      if (file) {
-        const fileId = file.$id;
-        data.featuredImage = fileId;
-        const dbPost = await appwriteSerice.createPost({
+    try {
+      let file;
+      if (post) {
+        if (data.image && data.image[0]) {
+          file = await appwriteService.uploadFile(data.image[0]);
+          if (file) {
+            await appwriteService.deleteFile(post.featuredImage);
+          }
+        }
+        const dbPost = await appwriteService.updatePost(post.$id, {
           ...data,
-          userId: userData.$id,
+          featuredImage: file ? file.$id : post.featuredImage,
         });
-
         if (dbPost) {
           navigate(`/post/${dbPost.$id}`);
         }
+      } else {
+        if (data.image && data.image[0]) {
+          file = await appwriteService.uploadFile(data.image[0]);
+          const dbPost = await appwriteService.createPost({
+            ...data,
+            userId: userData.$id,
+            featuredImage: file.$id,
+          });
+          if (dbPost) {
+            navigate(`/post/${dbPost.$id}`);
+          }
+        }
       }
+    } catch (error) {
+      console.error("Error submitting post:", error);
     }
   };
 
@@ -71,6 +73,7 @@ export default function PostForm({ post }) {
       }
     });
   }, [watch, slugTransform, setValue]);
+
   return (
     <form onSubmit={handleSubmit(submit)} className="flex flex-wrap">
       <div className="w-2/3 px-2">
@@ -98,7 +101,7 @@ export default function PostForm({ post }) {
           defaultValue={getValues("content")}
         />
       </div>
-      <div className="1/3 px-2">
+      <div className="w-1/3 px-2"> {/* Corrected class name */}
         <Input
           label="Featured Image"
           type="file"
@@ -106,10 +109,10 @@ export default function PostForm({ post }) {
           accept="image/png, image/jpg, image/jpeg"
           {...register("image", { required: !post })}
         />
-        {post && (
+        {post && post.featuredImage && (
           <div className="w-full mb-4">
             <img
-              src={appwriteSerice.getFilePreview(post.featuredImage)}
+              src={appwriteService.getFilePreview(post.featuredImage)}
               alt={post.title}
               className="rounded-lg"
             />
